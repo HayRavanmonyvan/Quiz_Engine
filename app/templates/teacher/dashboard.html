@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}Teacher Hub - Quiz Engine{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Header Card -->
+        <div class="gf-card gf-card-header-top p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <h2 class="fw-bold mb-0" style="color: var(--gf-purple);">Teacher Management Hub</h2>
+                        <span class="badge badge-role-teacher rounded-pill px-3 py-1">Teacher</span>
+                    </div>
+                    <p class="text-muted mb-0">Create, edit, delete, and evaluate quizzes and review student responses.</p>
+                </div>
+                <a href="{{ url_for('web.new_quiz') }}" class="btn gf-btn-purple px-4 py-2 shadow-sm">
+                    <i class="bi bi-plus-lg me-1"></i> Create New Quiz
+                </a>
+            </div>
+        </div>
+
+        <!-- Quizzes Table Card -->
+        <div class="gf-card p-0 overflow-hidden mb-4">
+            <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <h5 class="fw-bold mb-0 text-secondary">
+                        <i class="bi bi-journal-text me-1"></i> Managed Quizzes
+                    </h5>
+                    <span class="badge bg-secondary">{{ quizzes|length }} total</span>
+                </div>
+                {% if quizzes %}
+                <div class="input-group" style="max-width: 320px;">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" id="teacherQuizSearchInput" class="form-control form-control-sm border-start-0 ps-0" placeholder="Filter quizzes..." aria-label="Search quizzes">
+                    <button class="btn btn-outline-secondary btn-sm border-start-0" type="button" id="clearTeacherSearchBtn" style="display: none;">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Quiz Title</th>
+                            <th>Passing Threshold</th>
+                            <th>Questions</th>
+                            <th>Author</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for q in quizzes %}
+                        <tr class="teacher-quiz-row">
+                            <td class="ps-4">
+                                <div class="fw-semibold text-dark quiz-title">{{ q.title }}</div>
+                                <div class="small text-muted text-truncate quiz-desc" style="max-width: 320px;">
+                                    {{ q.description or 'No description' }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary-subtle text-dark border px-2 py-1">
+                                    {{ q.pass_percentage }}%
+                                </span>
+                            </td>
+                            <td>{{ q.question_count }} Questions</td>
+                            <td class="small text-secondary quiz-author">{{ q.creator_username or 'Teacher' }}</td>
+                            <td class="text-end pe-4">
+                                <div class="table-actions">
+                                    <a href="{{ url_for('web.quiz_responses', quiz_id=q.id) }}" class="btn btn-outline-primary" title="View Responses & Grade">
+                                        <i class="bi bi-bar-chart-fill me-1"></i> Responses
+                                    </a>
+                                    <a href="{{ url_for('web.edit_quiz', quiz_id=q.id) }}" class="btn btn-outline-secondary" title="Edit Quiz Questions">
+                                        <i class="bi bi-pencil-square me-1"></i> Edit
+                                    </a>
+                                    <a href="{{ url_for('web.take_quiz', quiz_id=q.id) }}" class="btn btn-outline-info" title="Preview Form" target="_blank">
+                                        <i class="bi bi-eye-fill me-1"></i> Preview
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteQuizModal{{ q.id }}" title="Delete Quiz">
+                                        <i class="bi bi-trash3-fill me-1"></i> Delete
+                                    </button>
+                                </div>
+
+                                <!-- Delete Confirmation Modal -->
+                                <div class="modal fade text-start" id="deleteQuizModal{{ q.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title text-danger fw-bold">
+                                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Confirm Delete Quiz
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to delete <strong>{{ q.title }}</strong>? 
+                                                All associated questions, options, and student submissions will be permanently removed.
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form method="POST" action="{{ url_for('web.delete_quiz', quiz_id=q.id) }}" class="d-inline">
+                                                    <button type="submit" class="btn btn-danger">Delete Quiz</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-folder-x fs-2 d-block mb-2 text-secondary"></i>
+                                No quizzes created yet.
+                                <div class="mt-2">
+                                    <a href="{{ url_for('web.new_quiz') }}" class="btn btn-sm gf-btn-purple">Create Your First Quiz</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        <tr id="noTeacherSearchResults" style="display: none;">
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="bi bi-search me-1"></i> No matching quizzes found.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/quiz_search.js') }}"></script>
+{% endblock %}

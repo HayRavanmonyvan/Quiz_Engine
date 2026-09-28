@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}{{ quiz.title }} - Google Form Quiz{% endblock %}
+
+{% block content %}
+{% if quiz.time_limit_minutes and quiz.time_limit_minutes > 0 %}
+<!-- Floating Sticky Countdown Timer (Controlled by quiz_timer.js) -->
+<div id="gfTimerBanner" 
+     class="position-fixed top-0 end-0 m-3 p-2 px-3 rounded-pill shadow-lg bg-white border border-danger-subtle d-flex align-items-center gap-2" 
+     style="z-index: 1060;"
+     data-time-limit-minutes="{{ quiz.time_limit_minutes }}">
+    <i class="bi bi-stopwatch-fill text-danger fs-5"></i>
+    <div class="d-flex flex-column lh-1">
+        <span class="text-muted" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Time Left</span>
+        <span class="fw-bold text-danger fs-6" id="timerDisplay">--:--</span>
+    </div>
+</div>
+{% endif %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8" style="max-width: 760px;">
+        <!-- Top Google Form Banner Card -->
+        <div class="gf-card gf-card-header-top p-4 mb-3">
+            <h2 class="fw-bold mb-2">{{ quiz.title }}</h2>
+            <p class="text-secondary mb-3">{{ quiz.description or 'Please read and answer each question carefully.' }}</p>
+            
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pt-3 border-top text-muted small">
+                <span>
+                    <i class="bi bi-person-check text-success me-1"></i> Responding as: <strong>{{ session_username }}</strong>
+                </span>
+                <span>
+                    <i class="bi bi-award me-1"></i> Passing threshold: <strong>{{ quiz.pass_percentage }}%</strong>
+                </span>
+                <span>
+                    <i class="bi bi-star-fill text-warning me-1"></i> Total Points: <strong>{{ quiz.max_possible_score }} pts</strong>
+                </span>
+                {% if quiz.time_limit_minutes and quiz.time_limit_minutes > 0 %}
+                <span>
+                    <i class="bi bi-stopwatch text-danger me-1"></i> Time Limit: <strong>{{ quiz.time_limit_minutes }} min</strong>
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Google Forms Live Completion Progress Bar -->
+        <div class="gf-progress-container d-flex align-items-center justify-content-between mb-4">
+            <span class="small fw-semibold text-secondary" id="gfProgressText">0 of {{ quiz.questions|length }} Answered (0%)</span>
+            <div class="progress flex-grow-1 mx-3" style="height: 6px; background-color: #e9ecef;">
+                <div class="gf-progress-bar-fill" id="gfProgressFill" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <!-- Quiz Submission Form -->
+        <form method="POST" action="{{ url_for('web.submit_quiz', quiz_id=quiz.id) }}" id="quizForm">
+            {% for q in quiz.questions %}
+            <div class="gf-question-card" id="qContainer_{{ q.id }}">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-secondary fw-semibold small">Question {{ loop.index }} of {{ quiz.questions|length }}</span>
+                    <span class="badge rounded-pill bg-light text-dark border px-3 py-1 fw-bold">
+                        {{ q.points }} pt{% if q.points > 1 %}s{% endif %}
+                    </span>
+                </div>
+
+                <h5 class="fw-semibold mb-4 text-dark">{{ q.prompt }}</h5>
+
+                <div class="options-container">
+                    {% for opt in q.options %}
+                    <label class="gf-option-label" for="opt_{{ opt.id }}">
+                        <input type="radio" 
+                               name="question_{{ q.id }}" 
+                               id="opt_{{ opt.id }}" 
+                               value="{{ opt.id }}" 
+                               required>
+                        <span class="text-dark">{{ opt.text }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Submit Action Card -->
+            <div class="d-flex justify-content-between align-items-center mt-4 mb-5">
+                <a href="{{ url_for('web.list_quizzes') }}" class="btn btn-outline-secondary px-4">
+                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn gf-btn-purple px-5 py-2 fs-6 shadow-sm" id="submitQuizBtn">
+                    Submit Assessment <i class="bi bi-send-fill ms-1"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Unanswered Questions Warning -->
+<div class="modal fade" id="unansweredModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-warning">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Incomplete Assessment
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                You still have <strong class="text-danger" id="unansweredCount">0</strong> unanswered question(s).
+                Are you sure you want to finish and submit your assessment now?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Review Questions</button>
+                <button type="button" class="btn gf-btn-purple" id="confirmSubmitAnywayBtn">Submit Anyway</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Static Assessment Timer & Progress Script -->
+<script src="{{ url_for('static', filename='js/quiz_timer.js') }}"></script>
+{% endblock %}

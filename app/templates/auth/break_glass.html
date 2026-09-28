@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Emergency Break-Glass Protocol - Quiz Engine{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-3">
+    <div class="col-md-7 col-lg-6">
+        <!-- Emergency Break-Glass Form Card -->
+        <div class="gf-card p-4 mb-4" style="border-top: 10px solid #d93025;">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2 bg-danger-subtle text-danger" 
+                     style="width: 58px; height: 58px;">
+                    <i class="bi bi-shield-exclamation fs-2"></i>
+                </div>
+                <h3 class="fw-bold mb-1 text-danger">Emergency Break-Glass Access</h3>
+                <p class="text-muted small mb-0">Disaster Recovery &amp; Administrative Continuity Protocol</p>
+            </div>
+
+            <!-- Warning Notice -->
+            <div class="alert alert-danger border-danger-subtle d-flex align-items-start gap-2 mb-4 p-3">
+                <i class="bi bi-exclamation-triangle-fill fs-5 mt-1 flex-shrink-0"></i>
+                <div class="small">
+                    <strong>RESTRICTED ACCESS PROTOCOL:</strong> Use this procedure only when the primary administrator is incapacitated, absent, or unreachable. 
+                    All logins via this portal require a mandatory justification and are <strong>permanently recorded in the institutional audit trail</strong>.
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('web.break_glass') }}">
+                <div class="mb-3">
+                    <label for="username" class="form-label fw-semibold">
+                        Administrative Account <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control form-control-lg" id="username" name="username" 
+                           placeholder="e.g. emergency_admin or admin" required autofocus>
+                    <div class="form-text">Must be an account with designated administrative authority.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label fw-semibold">
+                        Master Password <span class="text-danger">*</span>
+                    </label>
+                    <input type="password" class="form-control form-control-lg" id="password" name="password" 
+                           placeholder="Enter emergency credentials" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="reason" class="form-label fw-semibold">
+                        Mandatory Incident Justification <span class="text-danger">*</span>
+                    </label>
+                    <textarea class="form-control" id="reason" name="reason" rows="3" 
+                              placeholder="Detail the emergency reason (e.g. Primary administrator on medical leave; authorized by Academic Dean to manage midterm exam settings)..." 
+                              required minlength="8"></textarea>
+                    <div class="form-text">This statement is immutable and will appear in the system security logs.</div>
+                </div>
+
+                <div class="d-grid gap-2 mb-3">
+                    <button type="submit" class="btn btn-danger py-2 fs-6 shadow-sm">
+                        <i class="bi bi-shield-lock-fill me-1"></i> Authorize &amp; Execute Break-Glass Login
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="demoFillBtn">
+                        <i class="bi bi-lightning-charge-fill text-warning me-1"></i> 1-Click Demo Emergency Pre-fill
+                    </button>
+                </div>
+
+                <div class="text-center pt-3 border-top">
+                    <a href="{{ url_for('web.login') }}" class="text-decoration-none text-muted small">
+                        <i class="bi bi-arrow-left me-1"></i> Return to Standard Sign In
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const demoBtn = document.getElementById("demoFillBtn");
+    if (demoBtn) {
+        demoBtn.addEventListener("click", function() {
+            document.getElementById("username").value = "emergency_admin";
+            document.getElementById("password").value = "BreakGlass@911";
+            document.getElementById("reason").value = "Primary Administrator on emergency medical leave; authorized by Department Head to oversee quiz assessments.";
+            if (typeof showGfToast === "function") {
+                showGfToast("Emergency credentials and justification loaded.", "warning");
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

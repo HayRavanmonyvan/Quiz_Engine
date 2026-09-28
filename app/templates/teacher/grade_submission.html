@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Evaluate Submission #{{ submission.id }} - Teacher Hub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8" style="max-width: 780px;">
+        <!-- Header Card -->
+        <div class="gf-card gf-card-header-top p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge badge-role-teacher rounded-pill px-3 py-1">Manual Evaluation & Feedback</span>
+                <span class="text-muted small">Submitted: {{ submission.submitted_at }}</span>
+            </div>
+            <h3 class="fw-bold mb-1">{{ submission.quiz_title }}</h3>
+            <p class="text-secondary mb-0">Student: <strong>{{ submission.student_username }}</strong></p>
+        </div>
+
+        <!-- Grade & Feedback Form Card -->
+        <div class="gf-card p-4 mb-4">
+            <h5 class="fw-bold mb-3 text-secondary">
+                <i class="bi bi-pencil-square me-1"></i> Scoring & Instructor Feedback
+            </h5>
+
+            <form method="POST" action="{{ url_for('web.grade_submission', submission_id=submission.id) }}">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="total_score" class="form-label fw-semibold">
+                            Total Score (Max Possible: {{ submission.max_score }} pts)
+                        </label>
+                        <div class="input-group">
+                            <input type="number" step="0.1" min="0" max="{{ submission.max_score }}" 
+                                   class="form-control form-control-lg fw-bold" 
+                                   id="total_score" name="total_score" 
+                                   value="{{ submission.total_score }}" required>
+                            <span class="input-group-text">/ {{ submission.max_score }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="p-2 border rounded bg-light w-100">
+                            <span class="text-muted small d-block">Current Status:</span>
+                            {% if submission.passed %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Passed</span>
+                            {% else %}
+                                <span class="badge bg-danger"><i class="bi bi-x-circle-fill me-1"></i> Failed</span>
+                            {% endif %}
+                            <span class="small text-muted ms-2">({{ submission.percentage }}%)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="teacher_feedback" class="form-label fw-semibold">
+                        Instructor Comments / Feedback for Student
+                    </label>
+                    <textarea class="form-control" id="teacher_feedback" name="teacher_feedback" rows="3" 
+                              placeholder="Great effort! Here is some feedback on question 2...">{{ submission.teacher_feedback or '' }}</textarea>
+                    <div class="form-text">This note will be visible to the student on their assessment report card.</div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('web.quiz_responses', quiz_id=submission.quiz_id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn gf-btn-purple px-4">
+                        <i class="bi bi-check2-circle me-1"></i> Save Grade & Feedback
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Student Answers Reference -->
+        <h5 class="fw-bold mb-3 text-secondary">Student Answer Reference</h5>
+        {% for ans in submission.answers %}
+        <div class="gf-card p-3 mb-3 border-start border-4 {% if ans.is_correct %}border-success{% else %}border-danger{% endif %}">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="fw-semibold text-dark">{{ ans.question_prompt }}</span>
+                <span class="badge {% if ans.is_correct %}bg-success{% else %}bg-danger{% endif %} rounded-pill">
+                    {% if ans.is_correct %}Correct (+{{ ans.points_awarded }} pts){% else %}Incorrect (0 pts){% endif %}
+                </span>
+            </div>
+            <div class="small ps-2">
+                <div>Selected: <strong>{{ ans.selected_option_text or 'None' }}</strong></div>
+                {% if not ans.is_correct %}
+                <div class="text-success">Correct Option: <strong>{{ ans.correct_option_text }}</strong></div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="mb-5"></div>
+    </div>
+</div>
+{% endblock %}

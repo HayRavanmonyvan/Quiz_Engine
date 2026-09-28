@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Available Quizzes - Quiz Engine{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <!-- Header Card -->
+        <div class="gf-card gf-card-header-top p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h2 class="fw-bold mb-1" style="color: var(--gf-purple);">Available Assessments</h2>
+                    <p class="text-muted mb-0">Select an assessment below to test your knowledge.</p>
+                </div>
+                {% if is_teacher or is_admin %}
+                <a href="{{ url_for('web.new_quiz') }}" class="btn gf-btn-purple">
+                    <i class="bi bi-plus-lg me-1"></i> Build New Quiz
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if quizzes %}
+        <!-- Instant Search Bar -->
+        <div class="input-group mb-4 shadow-xs">
+            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+            <input type="text" id="quizSearchInput" class="form-control border-start-0 ps-0" placeholder="Search assessments by title, description, or instructor..." aria-label="Search quizzes">
+            <button class="btn btn-outline-secondary border-start-0" type="button" id="clearQuizSearchBtn" style="display: none;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        {% endif %}
+
+        <!-- Quiz List -->
+        <div class="row g-4" id="quizGrid">
+            {% for quiz in quizzes %}
+            <div class="col-md-6 quiz-card-item">
+                <div class="gf-card h-100 p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-bold mb-0 text-dark quiz-title">{{ quiz.title }}</h5>
+                            <div class="d-flex gap-1 flex-wrap justify-content-end">
+                                <span class="badge bg-purple-subtle text-purple border px-2 py-1" style="color: var(--gf-purple); background-color: var(--gf-purple-light);">
+                                    Pass: {{ quiz.pass_percentage }}%
+                                </span>
+                                {% if quiz.time_limit_minutes and quiz.time_limit_minutes > 0 %}
+                                <span class="badge bg-light text-secondary border px-2 py-1">
+                                    <i class="bi bi-stopwatch text-danger me-1"></i>{{ quiz.time_limit_minutes }} min
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <p class="text-secondary small mb-3 quiz-desc">
+                            {{ quiz.description or 'No description provided.' }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between text-muted small mb-3 pt-2 border-top">
+                            <span><i class="bi bi-patch-question me-1"></i> {{ quiz.question_count }} Questions</span>
+                            <span><i class="bi bi-person me-1"></i> <span class="quiz-author">{{ quiz.creator_username or 'Instructor' }}</span></span>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('web.take_quiz', quiz_id=quiz.id) }}" class="btn gf-btn-purple flex-grow-1">
+                                Attempt Quiz <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                            {% if is_teacher or is_admin %}
+                            <a href="{{ url_for('web.edit_quiz', quiz_id=quiz.id) }}" class="btn btn-outline-secondary" title="Edit Quiz Questions">
+                                <i class="bi bi-pencil-square me-1"></i> Edit
+                            </a>
+                            <a href="{{ url_for('web.quiz_responses', quiz_id=quiz.id) }}" class="btn btn-outline-primary" title="View Responses & Analytics">
+                                <i class="bi bi-bar-chart-fill me-1"></i> Responses
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12">
+                <div class="gf-card p-5 text-center text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary"></i>
+                    <h5>No Quizzes Available</h5>
+                    <p class="mb-3">There are currently no active quizzes published.</p>
+                    {% if is_teacher or is_admin %}
+                    <a href="{{ url_for('web.new_quiz') }}" class="btn gf-btn-purple">Create Your First Quiz</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- No Search Results Found Message -->
+            <div id="noQuizSearchResults" class="col-12" style="display: none;">
+                <div class="gf-card p-5 text-center text-muted">
+                    <i class="bi bi-search fs-1 d-block mb-3 text-secondary"></i>
+                    <h5>No Matching Assessments</h5>
+                    <p class="mb-0">No quizzes match your search criteria. Try a different keyword.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/quiz_search.js') }}"></script>
+{% endblock %}
